@@ -1,0 +1,4 @@
+*.pyc
+.idea
+python_disque.egg-info/
+env/
