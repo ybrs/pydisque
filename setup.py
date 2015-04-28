@@ -6,14 +6,14 @@ VERSION = '0.1'
 DESCRIPTION = 'disque client'
 
 setup(
-    name='python-disque',
+    name='pydisque',
     version=VERSION,
     description=DESCRIPTION,
     author='ybrs',
     license='MIT',
-    url="http://github.com/ybrs/mongomodels",
+    url="http://github.com/ybrs/pydisque",
     author_email='aybars.badur@gmail.com',
-    packages=['disque'],
+    packages=['pydisque'],
     install_requires=['redis'],
     classifiers = [
         'Development Status :: 4 - Beta',

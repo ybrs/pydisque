@@ -1,7 +1,7 @@
 import unittest
 import json
 import time
-from disque.client import Client
+from pydisque.client import Client
 
 class TestDisque(unittest.TestCase):
 

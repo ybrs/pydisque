@@ -1,4 +1,4 @@
-python-disque
+pydisque
 =========
 
 Client for Disque, an in-memory, distributed job queue.
@@ -9,7 +9,7 @@ Usage
 Create a new Disque client by passing a list of nodes:
 
 ```python
-from disque.client import Client
+from pydisque.client import Client
 client = Client(["127.0.0.1:7711", "127.0.0.1:7712", "127.0.0.1:7713"])
 client.connect()
 ```
@@ -47,5 +47,5 @@ Installation
 You can install it using pip.
 
 ```
-$ pip install python-disque
+$ pip install pydisque
 ```
