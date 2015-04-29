@@ -49,3 +49,7 @@ You can install it using pip.
 ```
 $ pip install pydisque
 ```
+
+License
+-----------
+This project is licensed under the terms of the MIT license
