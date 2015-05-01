@@ -1,5 +1,6 @@
 import redis
 from redis.exceptions import ConnectionError
+from functools import wraps
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,27 @@ class Node(object):
     def __repr__(self):
         return '<Node %s:%s>' % (self.host, self.port)
 
+class retry(object):
+    def __init__(self, retry_count=2):
+        self.retry_count = retry_count
+
+    def __call__(self, fn):
+
+        @wraps(fn)
+        def wrapped_f(*args, **kwargs):
+            c = 0
+            while c <= self.retry_count:
+                try:
+                    return fn(*args, **kwargs)
+                except:
+                    logging.critical("retrying because of this exception - %s", c)
+                    logging.exception("exception to retry ")
+                    if c == self.retry_count:
+                        raise
+                c += 1
+
+        return wrapped_f
+
 class Client(object):
 
     def __init__(self, nodes=None):
@@ -50,12 +72,15 @@ class Client(object):
         self.connected_node = None
 
     def connect(self):
+        self.connected_node = None
         for i, node in self.nodes.items():
             host, port = i.split(':')
             port = int(port)
             redis_client = redis.Redis(host, port)
             try:
-                format_version, node_id, other_nodes = redis_client.execute_command('HELLO')
+                ret = redis_client.execute_command('HELLO')
+                format_version, node_id = ret[0], ret[1]
+                others = ret[2:]
                 self.nodes[i] = Node(node_id, host, port, redis_client)
                 self.connected_node = self.nodes[i]
             except redis.exceptions.ConnectionError:
@@ -70,6 +95,16 @@ class Client(object):
         :rtype: redis.Redis
         """
         return self.connected_node.connection
+
+    @retry()
+    def execute_command(self, *args, **kwargs):
+        try:
+            return self.get_connection().execute_command(*args, **kwargs)
+        except ConnectionError as e:
+            logger.warn('trying to reconnect')
+            self.connect()
+            logger.warn('connected')
+            raise
 
     def add_job(self, queue_name, job, timeout=200, replicate=None, delay=None,
                 retry=None, ttl=None, maxlen=None, async=None):
@@ -107,7 +142,8 @@ class Client(object):
             command += ['ASYNC']
 
         logger.debug("sending job - %s", command)
-        job_id = self.get_connection().execute_command(*command)
+        job_id = self.execute_command(*command)
+        logger.debug("sent job - %s", command)
         logger.debug("job_id: %s " % job_id)
         return job_id
 
@@ -127,10 +163,8 @@ class Client(object):
         if count:
             command += ['COUNT', count]
 
-
-
         command += ['FROM'] + queues
-        results = self.get_connection().execute_command(*command)
+        results = self.execute_command(*command)
         if not results:
             return []
         return [(job_id, queue_name, payload) for job_id, queue_name, payload in results]
@@ -144,7 +178,7 @@ class Client(object):
         :param job_ids:
         :return:
         """
-        self.get_connection().execute_command('ACKJOB', *job_ids)
+        self.execute_command('ACKJOB', *job_ids)
 
     def fast_ack(self, *job_ids):
         """
@@ -155,7 +189,7 @@ class Client(object):
         :param job_ids:
         :return:
         """
-        self.get_connection().execute_command('ACKJOB', *job_ids)
+        self.execute_command('ACKJOB', *job_ids)
 
     def qlen(self, queue_name):
         """
@@ -166,7 +200,7 @@ class Client(object):
         :param queue:
         :return:
         """
-        return self.get_connection().execute_command('QLEN', queue_name)
+        return self.execute_command('QLEN', queue_name)
 
     def qpeek(self, queue_name, count):
         """
@@ -182,7 +216,7 @@ class Client(object):
         :param count:
         :return:
         """
-        return self.get_connection().execute_command("QPEEK", queue_name, count)
+        return self.execute_command("QPEEK", queue_name, count)
 
     def enqueue(self, *job_ids):
         """
@@ -191,7 +225,7 @@ class Client(object):
         :param job_ids:
         :return:
         """
-        return self.get_connection().execute_command("ENQUEUE", *job_ids)
+        return self.execute_command("ENQUEUE", *job_ids)
 
     def dequeue(self, *job_ids):
         """
@@ -200,7 +234,7 @@ class Client(object):
         :param job_ids:
         :return:
         """
-        return self.get_connection().execute_command("DEQUEUE", *job_ids)
+        return self.execute_command("DEQUEUE", *job_ids)
 
     def del_job(self, *job_ids):
         """
@@ -210,7 +244,7 @@ class Client(object):
         :param job_ids:
         :return:
         """
-        return self.get_connection().execute_command("DELJOB", *job_ids)
+        return self.execute_command("DELJOB", *job_ids)
 
     def show(self, job_id):
         """
@@ -219,7 +253,7 @@ class Client(object):
         :param job_id:
         :return:
         """
-        return self.get_connection().execute_command("DELJOB", *job_ids)
+        return self.execute_command("SHOW", job_id)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

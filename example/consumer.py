@@ -1,7 +1,9 @@
 import json
 import time
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-from disque.client import Client
+from pydisque.client import Client
 
 c = Client(['localhost:7712', 'localhost:7711'])
 c.connect()
