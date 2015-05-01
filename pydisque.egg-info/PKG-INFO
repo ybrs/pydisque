@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: pydisque
+Version: 0.1.1
+Summary: disque client
+Home-page: http://github.com/ybrs/pydisque
+Author: ybrs
+Author-email: aybars.badur@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Database
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

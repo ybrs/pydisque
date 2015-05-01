@@ -1,0 +1,8 @@
+setup.py
+pydisque/__init__.py
+pydisque/client.py
+pydisque.egg-info/PKG-INFO
+pydisque.egg-info/SOURCES.txt
+pydisque.egg-info/dependency_links.txt
+pydisque.egg-info/requires.txt
+pydisque.egg-info/top_level.txt
