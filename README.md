@@ -3,6 +3,11 @@ pydisque
 
 Client for Disque, an in-memory, distributed job queue.
 
+Documentation
+-------------
+
+[Read The Docs](http://pydisque.readthedocs.org/en/latest/)
+
 Usage
 -----
 
