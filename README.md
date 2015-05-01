@@ -14,6 +14,8 @@ client = Client(["127.0.0.1:7711", "127.0.0.1:7712", "127.0.0.1:7713"])
 client.connect()
 ```
 
+If it can't connect to first node, it will try to connect to second, etc.., if it can't connect to any node, it will raise a redis.exceptions.ConnectionError as you can imagine.
+
 Now you can add jobs:
 
 ```python
@@ -22,7 +24,7 @@ c.add_job("test_queue", json.dumps(["print", "hello", "world", time.time()]), ti
 
 It will push the job "print" to the queue "test_queue" with a timeout of 100
 ms, and return the id of the job if it was received and replicated
-in time.
+in time. If it can't reach the node - maybe it was shutdown etc. - it will retry to connect to another node in given node list, and then send the job. If there is no avail nodes in your node list, it will obviously raise a ConnectionError
 
 Then, your workers will do something like this:
 
@@ -37,9 +39,22 @@ while True:
 
 also check examples directory.
 
+While waiting jobs your connected node may go down, pydisque will try to connect to next node, so you can restart your nodes without taking down your clients.
+
 Documentation
 ------------
-For now please check docstrings in disque/client.py
+For now please check docstrings in disque/client.py, implemented commands are
+
+add_job
+get_job
+ack_job
+fast_ack
+qlen
+qpeek
+enqueue
+dequeue
+del_job
+show
 
 Installation
 ------------
