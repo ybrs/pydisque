@@ -55,13 +55,15 @@ class retry(object):
         return wrapped_f
 
 class Client(object):
+    """
+    Client is disque client, you can pass in a list of nodes, it will try to connect to first
+    if it can't then it will try to connect to second and so forth.
 
+    client = Client(['localhost:7711', 'localhost:7712'])
+    client.connect()
+
+    """
     def __init__(self, nodes=None):
-        """
-
-        :param nodes: list of nodes that can be connected eg: ['localhost:7711', 'localhost:7712']
-
-        """
         if nodes is None:
             nodes = ['localhost:7711']
 
@@ -72,6 +74,12 @@ class Client(object):
         self.connected_node = None
 
     def connect(self):
+        """
+        tries to connect to one of disque nodes, you can get current connection with
+        connected_node property
+
+        :return: nothing
+        """
         self.connected_node = None
         for i, node in self.nodes.items():
             host, port = i.split(':')
@@ -91,6 +99,7 @@ class Client(object):
 
     def get_connection(self):
         """
+        returns current connected_nodes connection
 
         :rtype: redis.Redis
         """
@@ -124,7 +133,7 @@ class Client(object):
         :param async: asks the server to let the command return ASAP and replicate the job to other nodes in the background.
             The job gets queued ASAP, while normally the job is put into the queue only when the client gets a positive reply.
 
-        :return:
+        :return: job_id
         """
         command = ['ADDJOB', queue_name, job, timeout]
 
@@ -153,7 +162,7 @@ class Client(object):
 
         :param queues: name of queues
 
-        :return: list of (job_id, queue_name, payload) - or empty list
+        :return: list of tuple(job_id, queue_name, payload) - or empty list
         :rtype: list
         """
         assert queues
@@ -175,8 +184,8 @@ class Client(object):
 
         Acknowledges the execution of one or more jobs via job IDs.
 
-        :param job_ids:
-        :return:
+        :param job_ids: list of job_ids
+
         """
         self.execute_command('ACKJOB', *job_ids)
 
@@ -187,7 +196,7 @@ class Client(object):
         Performs a best effort cluster wide deletion of the specified job IDs.
 
         :param job_ids:
-        :return:
+
         """
         self.execute_command('ACKJOB', *job_ids)
 
@@ -197,8 +206,8 @@ class Client(object):
 
         Length of queue
 
-        :param queue:
-        :return:
+        :param queue_name: name of the queue
+
         """
         return self.execute_command('QLEN', queue_name)
 
@@ -212,9 +221,9 @@ class Client(object):
         If count is negative the commands changes behavior and shows the count newest jobs,
         from the newest from the oldest.
 
-        :param queue_name:
+        :param queue_name: name of the queue
         :param count:
-        :return:
+
         """
         return self.execute_command("QPEEK", queue_name, count)
 
@@ -223,7 +232,7 @@ class Client(object):
         Queue jobs if not already queued.
 
         :param job_ids:
-        :return:
+
         """
         return self.execute_command("ENQUEUE", *job_ids)
 
@@ -231,8 +240,8 @@ class Client(object):
         """
         Remove the job from the queue.
 
-        :param job_ids:
-        :return:
+        :param job_ids: list of job_ids
+
         """
         return self.execute_command("DEQUEUE", *job_ids)
 
@@ -242,7 +251,7 @@ class Client(object):
         but limited to a single node since no DELJOB cluster bus message is sent to other nodes.
 
         :param job_ids:
-        :return:
+
         """
         return self.execute_command("DELJOB", *job_ids)
 
@@ -251,7 +260,7 @@ class Client(object):
         Describe the job.
 
         :param job_id:
-        :return:
+
         """
         return self.execute_command("SHOW", job_id)
 

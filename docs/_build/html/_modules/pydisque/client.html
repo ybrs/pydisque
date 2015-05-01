@@ -1,0 +1,370 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pydisque.client &mdash; pydisque 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pydisque 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pydisque 0.1.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pydisque.client</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">redis</span>
+<span class="kn">from</span> <span class="nn">redis.exceptions</span> <span class="kn">import</span> <span class="n">ConnectionError</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">payload</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_name</span> <span class="o">=</span> <span class="n">queue_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">payload</span> <span class="o">=</span> <span class="n">payload</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Job id:</span><span class="si">%s</span><span class="s"> queue_name:</span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue_name</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param node_id:</span>
+<span class="sd">        :param host:</span>
+<span class="sd">        :param port:</span>
+<span class="sd">        :param connection: redis.Redis connection</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Node </span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">retry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retry_count</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retry_count</span> <span class="o">=</span> <span class="n">retry_count</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapped_f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry_count</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">&quot;retrying because of this exception - </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;exception to retry &quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry_count</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">wrapped_f</span>
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../index.html#pydisque.client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Client is disque client, you can pass in a list of nodes, it will try to connect to first</span>
+<span class="sd">    if it can&#39;t then it will try to connect to second and so forth.</span>
+
+<span class="sd">    client = Client([&#39;localhost:7711&#39;, &#39;localhost:7712&#39;])</span>
+<span class="sd">    client.connect()</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;localhost:7711&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Client.connect"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        tries to connect to one of disque nodes, you can get current connection with</span>
+<span class="sd">        connected_node property</span>
+
+<span class="sd">        :return: nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+            <span class="n">redis_client</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">redis_client</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&#39;HELLO&#39;</span><span class="p">)</span>
+                <span class="n">format_version</span><span class="p">,</span> <span class="n">node_id</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">others</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">redis_client</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">redis</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;couldnt connect to any nodes&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;connected to node </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.get_connection"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.get_connection">[docs]</a>    <span class="k">def</span> <span class="nf">get_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns current connected_nodes connection</span>
+
+<span class="sd">        :rtype: redis.Redis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_node</span><span class="o">.</span><span class="n">connection</span>
+</div>
+    <span class="nd">@retry</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">execute_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">()</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;trying to reconnect&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;connected&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+<div class="viewcode-block" id="Client.add_job"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.add_job">[docs]</a>    <span class="k">def</span> <span class="nf">add_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">replicate</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">retry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">async</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ADDJOB queue_name job &lt;ms-timeout&gt; [REPLICATE &lt;count&gt;] [DELAY &lt;sec&gt;] [RETRY &lt;sec&gt;] [TTL &lt;sec&gt;] [MAXLEN &lt;count&gt;] [ASYNC]</span>
+
+<span class="sd">        :param queue_name: is the name of the queue, any string, basically.</span>
+<span class="sd">        :param job: is a string representing the job.</span>
+<span class="sd">        :param timeout: is the command timeout in milliseconds.</span>
+<span class="sd">        :param replicate: count is the number of nodes the job should be replicated to.</span>
+<span class="sd">        :param delay: sec is the number of seconds that should elapse before the job is queued by any server.</span>
+<span class="sd">        :param retry: sec period after which, if no ACK is received, the job is put again into the queue for delivery.</span>
+<span class="sd">            If RETRY is 0, the job has an at-least-once delivery semantics.</span>
+<span class="sd">        :param ttl: sec is the max job life in seconds. After this time, the job is deleted even if it was not successfully delivered.</span>
+<span class="sd">        :param maxlen: count specifies that if there are already count messages queued for the specified queue name,</span>
+<span class="sd">            the message is refused and an error reported to the client.</span>
+<span class="sd">        :param async: asks the server to let the command return ASAP and replicate the job to other nodes in the background.</span>
+<span class="sd">            The job gets queued ASAP, while normally the job is put into the queue only when the client gets a positive reply.</span>
+
+<span class="sd">        :return: job_id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;ADDJOB&#39;</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">timeout</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">replicate</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;REPLICATE&#39;</span><span class="p">,</span> <span class="n">replicate</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;DELAY&#39;</span><span class="p">,</span> <span class="n">delay</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">retry</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;RETRY&#39;</span><span class="p">,</span> <span class="n">retry</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ttl</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;TTL&#39;</span><span class="p">,</span> <span class="n">ttl</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">maxlen</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;MAXLEN&#39;</span><span class="p">,</span> <span class="n">maxlen</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">async</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;ASYNC&#39;</span><span class="p">]</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;sending job - </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+        <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="o">*</span><span class="n">command</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;sent job - </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;job_id: </span><span class="si">%s</span><span class="s"> &quot;</span> <span class="o">%</span> <span class="n">job_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">job_id</span>
+</div>
+<div class="viewcode-block" id="Client.get_job"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.get_job">[docs]</a>    <span class="k">def</span> <span class="nf">get_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        GETJOB [TIMEOUT &lt;ms-timeout&gt;] [COUNT &lt;count&gt;] FROM queue1 queue2 ... queueN</span>
+
+<span class="sd">        :param queues: name of queues</span>
+
+<span class="sd">        :return: list of tuple(job_id, queue_name, payload) - or empty list</span>
+<span class="sd">        :rtype: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">queues</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GETJOB&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">timeout</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;TIMEOUT&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+            <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;COUNT&#39;</span><span class="p">,</span> <span class="n">count</span><span class="p">]</span>
+
+        <span class="n">command</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;FROM&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">queues</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="o">*</span><span class="n">command</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span> <span class="k">for</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">payload</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Client.ack_job"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.ack_job">[docs]</a>    <span class="k">def</span> <span class="nf">ack_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        ACKJOB jobid1 jobid2 ... jobidN</span>
+
+<span class="sd">        Acknowledges the execution of one or more jobs via job IDs.</span>
+
+<span class="sd">        :param job_ids: list of job_ids</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&#39;ACKJOB&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.fast_ack"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.fast_ack">[docs]</a>    <span class="k">def</span> <span class="nf">fast_ack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        FASTACK jobid1 jobid2 ... jobidN</span>
+
+<span class="sd">        Performs a best effort cluster wide deletion of the specified job IDs.</span>
+
+<span class="sd">        :param job_ids:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&#39;ACKJOB&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.qlen"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.qlen">[docs]</a>    <span class="k">def</span> <span class="nf">qlen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        QLEN &lt;qname&gt;</span>
+
+<span class="sd">        Length of queue</span>
+
+<span class="sd">        :param queue_name: name of the queue</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&#39;QLEN&#39;</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.qpeek"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.qpeek">[docs]</a>    <span class="k">def</span> <span class="nf">qpeek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        QPEEK &lt;qname&gt; &lt;count&gt;</span>
+
+<span class="sd">        Return, without consuming from queue, count jobs.</span>
+<span class="sd">        If count is positive the specified number of jobs are returned from the oldest</span>
+<span class="sd">        to the newest (in the same best-effort FIFO order as GETJOB).</span>
+<span class="sd">        If count is negative the commands changes behavior and shows the count newest jobs,</span>
+<span class="sd">        from the newest from the oldest.</span>
+
+<span class="sd">        :param queue_name: name of the queue</span>
+<span class="sd">        :param count:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&quot;QPEEK&quot;</span><span class="p">,</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.enqueue"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.enqueue">[docs]</a>    <span class="k">def</span> <span class="nf">enqueue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Queue jobs if not already queued.</span>
+
+<span class="sd">        :param job_ids:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&quot;ENQUEUE&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.dequeue"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.dequeue">[docs]</a>    <span class="k">def</span> <span class="nf">dequeue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove the job from the queue.</span>
+
+<span class="sd">        :param job_ids: list of job_ids</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&quot;DEQUEUE&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.del_job"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.del_job">[docs]</a>    <span class="k">def</span> <span class="nf">del_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Completely delete a job from a node. Note that this is similar to FASTACK,</span>
+<span class="sd">        but limited to a single node since no DELJOB cluster bus message is sent to other nodes.</span>
+
+<span class="sd">        :param job_ids:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&quot;DELJOB&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">job_ids</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Client.show"><a class="viewcode-back" href="../../index.html#pydisque.client.Client.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Describe the job.</span>
+
+<span class="sd">        :param job_id:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s">&quot;SHOW&quot;</span><span class="p">,</span> <span class="n">job_id</span><span class="p">)</span>
+</div></div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">Client</span><span class="p">([</span><span class="s">&#39;localhost:7712&#39;</span><span class="p">,</span> <span class="s">&#39;localhost:7711&#39;</span><span class="p">])</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="s">&quot;hello&quot;</span><span class="p">,</span> <span class="s">&quot;1234&quot;</span><span class="p">])</span>
+    <span class="k">print</span> <span class="n">c</span><span class="o">.</span><span class="n">add_job</span><span class="p">(</span><span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="n">job</span><span class="p">)</span>
+
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_job</span><span class="p">([</span><span class="s">&#39;test&#39;</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">queue_name</span><span class="p">,</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">payload</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">job_id</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">ack_job</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+    <span class="c"># while True:</span>
+    <span class="c">#     jobs = c.get_job([&#39;test&#39;], timeout=5)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, ybrs.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.3</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
