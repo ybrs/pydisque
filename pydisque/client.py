@@ -198,7 +198,7 @@ class Client(object):
         :param job_ids:
 
         """
-        self.execute_command('ACKJOB', *job_ids)
+        self.execute_command('FASTACK', *job_ids)
 
     def qlen(self, queue_name):
         """
