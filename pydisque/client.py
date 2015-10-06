@@ -189,6 +189,17 @@ class Client(object):
         """
         self.execute_command('ACKJOB', *job_ids)
 
+    def nack_job(self, *job_ids):
+        """
+        NACK jobid1 jobid2 ... jobidN
+
+        Acknowledges the failure of one or more jobs via job IDs.
+
+        :param job_ids: list of job_ids
+
+        """
+        self.execute_command('NACK', *job_ids)
+
     def fast_ack(self, *job_ids):
         """
         FASTACK jobid1 jobid2 ... jobidN
