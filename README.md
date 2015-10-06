@@ -53,6 +53,7 @@ For now please check docstrings in disque/client.py, implemented commands are
 add_job
 get_job
 ack_job
+nack_job
 fast_ack
 qlen
 qpeek
