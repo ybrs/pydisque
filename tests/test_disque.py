@@ -23,8 +23,10 @@ class TestDisque(unittest.TestCase):
         assert len(self.client.get_job(['test_q'], timeout=100)) == 0
 
     def test_nack(self):
-        """Fetch the queue, return a job, check that it's back.
         """
+        Fetch the queue, return a job, check that it's back.
+        """
+        print self.client.info()
         t1 = time.time()
         self.client.add_job("test_nack_q", json.dumps(["foo", str(t1)]),
                             timeout=100)
@@ -44,6 +46,21 @@ class TestDisque(unittest.TestCase):
             assert job[1] == str(t1)
             self.client.ack_job(job_id)
         assert len(self.client.get_job(['test_nack_q'], timeout=100)) == 0
+
+    def test_qscan(self):
+        """
+            Kind of a simple test, just making sure we get something
+            back.
+        """
+        t1 = time.time()
+        qa = self.client.qscan()
+        #print "Cursor: %s Jobs: %s" % (qa[0], qa[1])
+        self.client.add_job("q1", str(t1), timeout=100)
+        self.client.add_job("q2", str(t1), timeout=100)
+        qb = self.client.qscan()
+        #print "Cursor: %s Jobs: %s" % (qb[0], qb[1])
+        assert qb[0]
+        assert qb[1]
 
 if __name__ == '__main__':
     unittest.main()

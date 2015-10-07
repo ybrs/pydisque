@@ -115,6 +115,9 @@ class Client(object):
             logger.warn('connected')
             raise
 
+    def info(self):
+        return self.execute_command("INFO")
+
     def add_job(self, queue_name, job, timeout=200, replicate=None, delay=None,
                 retry=None, ttl=None, maxlen=None, async=None):
         """
@@ -211,6 +214,19 @@ class Client(object):
         """
         self.execute_command('FASTACK', *job_ids)
 
+    def working(self, job_id):
+        """
+        WORKING <jobid>
+
+        Asks Disque to postpone the next time it will deliver 
+        again the job.
+
+        :param job_id: name of the job still being worked on
+        :returns: returns the number of seconds you (likely) 
+            postponed the message visiblity for other workers
+        """
+        return self.execute_command('WORKING', job_id)
+
     def qlen(self, queue_name):
         """
         QLEN <qname>
@@ -274,6 +290,33 @@ class Client(object):
 
         """
         return self.execute_command("SHOW", job_id)
+
+    def qscan(self, cursor=0, count=None, busyloop=None, minlen=None, 
+            maxlen=None, importrate=None):
+        """
+        Iterate all the existing queues in the local node.
+        
+        :param count: An hint about how much work to do per iteration.
+        :param busyloop: Block and return all the elements in a busy loop.
+        :param minlen: Don't return elements with less than count jobs queued.
+        :param maxlen: Don't return elements with more than count jobs queued.
+        :param importrate: Only return elements with an job import rate 
+                        (from other nodes) >= rate.
+        """
+        
+        command = ["QSCAN", cursor]
+        if count:
+            command += ["COUNT", count]
+        if busyloop:
+            command += ["BUSYLOOP"]
+        if minlen:
+            command += ["MINLEN", minlen]
+        if maxlen:
+            command += ["MAXLEN", maxlen]
+        if importrate:
+            command += ["IMPORTRATE", importrate]
+
+        return self.execute_command(*command)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
