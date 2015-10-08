@@ -26,7 +26,6 @@ class TestDisque(unittest.TestCase):
         """
         Fetch the queue, return a job, check that it's back.
         """
-        print self.client.info()
         t1 = time.time()
         self.client.add_job("test_nack_q", json.dumps(["foo", str(t1)]),
                             timeout=100)
@@ -49,8 +48,8 @@ class TestDisque(unittest.TestCase):
 
     def test_qscan(self):
         """
-            Kind of a simple test, just making sure we get something
-            back.
+        This test relies on add_job() being functional, and
+        the local disque not being a disque proxy to a mesh.
         """
         t1 = time.time()
         qa = self.client.qscan()
@@ -61,6 +60,12 @@ class TestDisque(unittest.TestCase):
         #print "Cursor: %s Jobs: %s" % (qb[0], qb[1])
         assert qb[0]
         assert qb[1]
+
+        # i am thinking we need some kind of master 'clear queue' 
+        # command in disque, hopefully not just for the purposes of
+        # making this unit test more effective...
+        assert "q1" in qb[1]
+        assert "q2" in qb[1]
 
 if __name__ == '__main__':
     unittest.main()
