@@ -60,6 +60,7 @@ working
 qlen
 qpeek
 qscan
+jscan
 enqueue
 dequeue
 del_job

@@ -1,6 +1,7 @@
 import unittest
 import json
 import time
+import random
 from pydisque.client import Client
 
 
@@ -66,6 +67,16 @@ class TestDisque(unittest.TestCase):
         # making this unit test more effective...
         assert "q1" in qb[1]
         assert "q2" in qb[1]
+
+    def test_jscan(self):
+       """
+       Simple check of JSCAN.
+       """
+       t1 = time.time()
+       queuename = "test_jscan-%d" % random.randint(1000,1000000)
+       j1 = self.client.add_job(queuename, str(t1), timeout=100)
+       jerbs = self.client.jscan(queue=queuename)
+       assert j1 in jerbs[1]
 
 if __name__ == '__main__':
     unittest.main()
