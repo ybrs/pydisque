@@ -322,7 +322,7 @@ class Client(object):
     def jscan(self, cursor=0, count=None, busyloop=None, queue=None, 
             state=None, reply=None):
         """
-        Iterate all the existing queues in the local node.
+        Iterate all the existing jobs in the local node.
         
         :param count: An hint about how much work to do per iteration.
         :param busyloop: Block and return all the elements in a busy loop.
