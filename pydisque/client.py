@@ -34,7 +34,7 @@ class Node(object):
         :param host:
         :param port:
         :param connection: redis.Redis connection
-        :return:
+        :returns:
         """
         self.node_id = node_id
         self.host = host
@@ -82,8 +82,11 @@ class Client(object):
     first if it can't then it will try to connect to second and
     so forth.
 
-    client = Client(['localhost:7711', 'localhost:7712'])
-    client.connect()
+    :Example:
+
+    >>> client = Client(['localhost:7711', 'localhost:7712'])
+    >>> client.connect()
+    
     """
 
     def __init__(self, nodes=None):
@@ -103,7 +106,7 @@ class Client(object):
 
         You can get current connection with connected_node property
 
-        :return: nothing
+        :returns: nothing
         """
         self.connected_node = None
         for i, node in self.nodes.items():
@@ -119,7 +122,7 @@ class Client(object):
             except redis.exceptions.ConnectionError:
                 pass
         if not self.connected_node:
-            raise Exception('couldnt connect to any nodes')
+           raise Exception('couldnt connect to any nodes')
         logger.info("connected to node %s" % self.connected_node)
 
     def get_connection(self):
@@ -147,6 +150,7 @@ class Client(object):
 
         INFO
 
+        :returns: server info
         """
         return self.execute_command("INFO")
 
@@ -178,7 +182,7 @@ class Client(object):
             gets queued ASAP, while normally the job is put into the queue
             only when the client gets a positive reply.
 
-        :return: job_id
+        :returns: job_id
         """
         command = ['ADDJOB', queue_name, job, timeout]
 
@@ -210,7 +214,7 @@ class Client(object):
 
         :param queues: name of queues
 
-        :return: list of tuple(job_id, queue_name, payload) - or empty list
+        :returns: list of tuple(job_id, queue_name, payload) - or empty list
         :rtype: list
         """
         assert queues
@@ -279,6 +283,7 @@ class Client(object):
         QLEN <qname>
 
         :param queue_name: name of the queue
+        :returns: length of the queue
 
         """
         return self.execute_command('QLEN', queue_name)
@@ -296,7 +301,7 @@ class Client(object):
         QPEEK <qname> <count>
 
         :param queue_name: name of the queue
-        :param count:
+        :param count: 
 
         """
         return self.execute_command("QPEEK", queue_name, count)
