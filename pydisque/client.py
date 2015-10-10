@@ -1,4 +1,5 @@
-"""Pydisque makes disque easy to access in python."""
+"""Pydisque makes Disque easy to access in python."""
+
 import redis
 from redis.exceptions import ConnectionError
 from functools import wraps
@@ -28,7 +29,7 @@ class Node(object):
 
     def __init__(self, node_id, host, port, connection):
         """
-        Initialize a the disque Node.
+        Initialize a the Disque Node.
 
         :param node_id:
         :param host:
@@ -86,7 +87,7 @@ class Client(object):
 
     >>> client = Client(['localhost:7711', 'localhost:7712'])
     >>> client.connect()
-    
+
     """
 
     def __init__(self, nodes=None):
@@ -102,7 +103,7 @@ class Client(object):
 
     def connect(self):
         """
-        Connect to one of the disque nodes.
+        Connect to one of the Disque nodes.
 
         You can get current connection with connected_node property
 
@@ -122,7 +123,7 @@ class Client(object):
             except redis.exceptions.ConnectionError:
                 pass
         if not self.connected_node:
-           raise Exception('couldnt connect to any nodes')
+            raise Exception('couldnt connect to any nodes')
         logger.info("connected to node %s" % self.connected_node)
 
     def get_connection(self):
@@ -266,7 +267,7 @@ class Client(object):
 
     def working(self, job_id):
         """
-        Signal disque to postpone the next time it will deliver the job again.
+        Signal Disque to postpone the next time it will deliver the job again.
 
         WORKING <jobid>
 
@@ -288,6 +289,18 @@ class Client(object):
         """
         return self.execute_command('QLEN', queue_name)
 
+    def qstat(self, queue_name):
+        """
+        Return the status of the queue (currently unimplemented).
+
+        Future support / testing of QSTAT support in Disque
+
+        QSTAT <qname> (TODO)
+
+        Return produced ... consumed ... idle ... sources [...] ctime ...
+        """
+        return self.execute_command('QSTAT', queue_name)
+
     def qpeek(self, queue_name, count):
         """
         Return, without consuming from queue, count jobs.
@@ -301,7 +314,7 @@ class Client(object):
         QPEEK <qname> <count>
 
         :param queue_name: name of the queue
-        :param count: 
+        :param count:
 
         """
         return self.execute_command("QPEEK", queue_name, count)
