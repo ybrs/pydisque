@@ -69,13 +69,13 @@ def main():
             rnd = random.random()
 
             # as this is a test processor, we don't do any validation on
-            # the actual job body
+            # the actual job body, so lets just pay attention to id's
 
             if rnd >= nack:
-                print ">>> received job:", job
+                print ">>> received job:", job_id
                 c.ack_job(job_id)
             else:
-                print ">>> bouncing job:", job
+                print ">>> bouncing job:", job_id
                 c.nack_job(job_id)
 
 
