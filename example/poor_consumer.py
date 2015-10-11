@@ -1,5 +1,4 @@
 """poor_consumer is an example of mixing NACK and ACK messages."""
-import json
 import time
 import sys
 import getopt
