@@ -50,21 +50,22 @@ Documentation
 ------------
 For now please check docstrings in disque/client.py, implemented commands are
 
-info
-add_job
-get_job
-ack_job
-nack_job
-fast_ack
-working
-qlen
-qpeek
-qscan
-jscan
-enqueue
-dequeue
-del_job
-show
+- info
+- add_job
+- get_job
+- ack_job
+- nack_job
+- fast_ack
+- working
+- qlen
+- qstat
+- qpeek
+- qscan
+- jscan
+- enqueue
+- dequeue
+- del_job
+- show
 
 Installation
 ------------

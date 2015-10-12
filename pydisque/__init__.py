@@ -1,1 +1,1 @@
-"""pydisque makes access to disque in python easy."""
+"""pydisque makes access to Disque in python easy."""
