@@ -82,6 +82,6 @@ This project is licensed under the terms of the MIT license
 
 Credits
 -----------
-ybrs
-lovelle
-canardleteer
+- [ybrs](https://github.com/ybrs)
+- [lovelle](https://github.com/lovelle)
+- [canardleteer](https://github.com/canardleteer)
