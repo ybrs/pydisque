@@ -79,3 +79,9 @@ $ pip install pydisque
 License
 -----------
 This project is licensed under the terms of the MIT license
+
+Credits
+-----------
+ybrs
+lovelle
+canardleteer

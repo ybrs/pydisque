@@ -421,11 +421,11 @@ if __name__ == '__main__':
     c.connect()
     import json
     job = json.dumps(["hello", "1234"])
-    print c.add_job("test", job)
+    logger.info(c.add_job("test", job))
 
     jobs = c.get_job(['test'], timeout=5)
     for queue_name, job_id, payload in jobs:
-        print job_id
+        logger.info(job_id)
         c.ack_job(job_id)
 
     # while True:

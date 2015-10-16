@@ -14,7 +14,7 @@ setup(
     url="http://github.com/ybrs/pydisque",
     author_email='aybars.badur@gmail.com',
     packages=['pydisque'],
-    install_requires=['redis'],
+    install_requires=['redis', 'six'],
     classifiers = [
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
