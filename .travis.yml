@@ -24,4 +24,5 @@ before_script:
   - export PATH=$PATH:$PWD/disque-master/src/
   - cd disque-master && make
   - disque-server &
+  - cd ..
   - sleep 10
