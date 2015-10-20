@@ -25,4 +25,3 @@ before_script:
   - cd disque-master && make
   - disque-server &
   - sleep 10
-
