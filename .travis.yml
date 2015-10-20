@@ -13,7 +13,7 @@ install:
   - pip install .
   - pip install -r requirements.txt
 # command to run tests
-script: tox
+script: nosetests
 addons:
   apt:
     sources:
@@ -25,4 +25,3 @@ before_script:
   - cd disque-master && make
   - disque-server &
   - sleep 10
-
