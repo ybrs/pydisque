@@ -3,9 +3,7 @@ pydisque
 
 Client for Disque, an in-memory, distributed job queue.
 
-### Status
-[![Build Status](https://travis-ci.org/canardleteer/pydisque.png)](https://travis-ci.org/canardleteer/pydisque)
-
+[![Build Status](https://travis-ci.org/ybrs/pydisque.png)](https://travis-ci.org/ybrs/pydisque.png)
 
 Documentation
 -------------
