@@ -94,5 +94,18 @@ class TestDisque(unittest.TestCase):
         jerbs = self.client.jscan(queue=queuename)
         assert j1 not in jerbs[1]
 
+    def test_qlen(self):
+        """Simple test of qlen."""
+
+        queuename = "test_qlen-%d" % random.randint(1000, 1000000)
+
+        lengthOfTest = 100
+        test_job = "Useless Job."
+
+        for x in range(lengthOfTest):
+            self.client.add_job(queuename, test_job)
+
+        assert self.client.qlen(queuename) == lengthOfTest
+
 if __name__ == '__main__':
     unittest.main()
