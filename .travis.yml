@@ -1,0 +1,28 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+  - "3.2"
+  - "3.3"
+  - "3.4"
+  # does not have headers provided, please ask https://launchpad.net/~pypy/+archive/ppa
+  # maintainers to fix their pypy-dev package.
+  - "pypy"
+# command to install dependencies
+install:
+  - pip install .
+  - pip install -r requirements.txt
+# command to run tests
+script: nosetests
+addons:
+  apt:
+    sources:
+      - build-essential
+before_script:
+  - wget https://github.com/antirez/disque/archive/master.tar.gz -O /tmp/disque.tar.gz
+  - tar -xvf /tmp/disque.tar.gz
+  - export PATH=$PATH:$PWD/disque-master/src/
+  - cd disque-master && make
+  - disque-server &
+  - cd ..
+  - sleep 10
