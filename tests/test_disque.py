@@ -75,8 +75,37 @@ class TestDisque(unittest.TestCase):
         t1 = time.time()
         queuename = "test_jscan-%d" % random.randint(1000, 1000000)
         j1 = self.client.add_job(queuename, str(t1), timeout=100)
+
         jerbs = self.client.jscan(queue=queuename)
         assert j1 in jerbs[1]
+
+    def test_del_job(self):
+        """Simple test of del_job, needs jscan."""
+        t1 = time.time()
+        queuename = "test_del_job-%d" % random.randint(1000, 1000000)
+
+        j1 = self.client.add_job(queuename, str(t1))
+
+        jerbs = self.client.jscan(queue=queuename)
+        assert j1 in jerbs[1]
+
+        self.client.del_job(j1)
+
+        jerbs = self.client.jscan(queue=queuename)
+        assert j1 not in jerbs[1]
+
+    def test_qlen(self):
+        """Simple test of qlen."""
+
+        queuename = "test_qlen-%d" % random.randint(1000, 1000000)
+
+        lengthOfTest = 100
+        test_job = "Useless Job."
+
+        for x in range(lengthOfTest):
+            self.client.add_job(queuename, test_job)
+
+        assert self.client.qlen(queuename) == lengthOfTest
 
 if __name__ == '__main__':
     unittest.main()
