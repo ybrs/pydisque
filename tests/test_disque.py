@@ -1,4 +1,9 @@
-"""Unit Tests for the pydisque module."""
+"""
+Unit Tests for the pydisque module.
+
+Currently, most of these tests require a fresh instance of
+Disque to be valid and pass.
+"""
 
 import unittest
 import json
@@ -46,6 +51,19 @@ class TestDisque(unittest.TestCase):
             assert job == six.b(t1)
             self.client.ack_job(job_id)
         assert len(self.client.get_job(['test_nack_q'], timeout=100)) == 0
+
+    def test_qpeek(self):
+        """
+        Test qpeek
+        
+        Ran into some problems with an ENQUEUE/DEQUEUE test that
+        was using qpeek, checking core functionality of qpeek().
+        """
+        queuename = "test_qpeek-%d" % random.randint(1000, 1000000)
+        job_id = self.client.add_job(queuename, "Peek A Boo")
+
+        peeked = self.client.qpeek(queuename, 1)
+        assert peeked[0][1] == job_id
 
     def test_qscan(self):
         """
