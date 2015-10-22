@@ -98,19 +98,30 @@ class TestDisque(unittest.TestCase):
         assert j1 in jerbs[1]
 
     def test_del_job(self):
-        """Simple test of del_job, needs jscan."""
+        """Simple test of del_job, needs qpeek.
+        
+        FIXME: This function has grown ugly.
+        """
         t1 = time.time()
         queuename = "test_del_job-%d" % random.randint(1000, 1000000)
 
         j1 = self.client.add_job(queuename, str(t1))
 
-        jerbs = self.client.jscan(queue=queuename)
-        assert j1 in jerbs[1]
+        jerbs = self.client.qpeek(queuename, 1)
+        jlist = []
+        for item in jerbs:
+            jlist.append(item[1])
+
+        assert j1 in jlist
 
         self.client.del_job(j1)
 
-        jerbs = self.client.jscan(queue=queuename)
-        assert j1 not in jerbs[1]
+        jerbs = self.client.qpeek(queuename, 1)
+        jlist = []
+        for item in jerbs:
+            jlist.append(item[1])
+
+        assert j1 not in jerbs
 
     def test_qlen(self):
         """Simple test of qlen."""
@@ -124,6 +135,25 @@ class TestDisque(unittest.TestCase):
             self.client.add_job(queuename, test_job)
 
         assert self.client.qlen(queuename) == lengthOfTest
+
+    def test_shownack(self):
+        """Simple test of show and nack."""
+        queuename = "test_show-%d" % random.randint(1000, 1000000)
+
+        test_job = six.b("Show me.")
+
+        self.client.add_job(queuename, test_job)
+
+        jobs = self.client.get_job([queuename])
+        for queue_name, job_id, job in jobs:
+            self.client.nack_job(job_id)
+
+        shown = self.client.show(job_id)
+
+        print(shown)
+
+        assert shown[six.b('body')] == test_job
+        assert shown[six.b('nacks')] == 1
 
 if __name__ == '__main__':
     unittest.main()
