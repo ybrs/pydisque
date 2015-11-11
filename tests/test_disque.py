@@ -17,10 +17,14 @@ class TestDisque(unittest.TestCase):
 
     """TestCase class for pydisque."""
 
+    testID = None
+
     def setUp(self):
         """Setup the tests."""
         self.client = Client(['localhost:7711'])
         self.client.connect()
+        self.testID = "%d.%d" % (time.time(),
+            random.randint(1000, 1000000))
 
     def test_publish_and_receive(self):
         """Test the most important functions of pydisque."""
@@ -36,8 +40,9 @@ class TestDisque(unittest.TestCase):
     def test_nack(self):
         """Fetch the queue, return a job, check that it's back."""
         t1 = str(time.time())
-        self.client.add_job("test_nack_q", str(t1), timeout=100)
-        jobs = self.client.get_job(['test_nack_q'])
+        queuename = "test_nack." + self.testID
+        self.client.add_job(queuename, str(t1), timeout=100)
+        jobs = self.client.get_job([queuename])
         # NACK the first read
         assert len(jobs) == 1
         for queue_name, job_id, job in jobs:
@@ -45,21 +50,21 @@ class TestDisque(unittest.TestCase):
             assert job == six.b(t1)
             self.client.nack_job(job_id)
         # this time ACK it
-        jobs = self.client.get_job(['test_nack_q'])
+        jobs = self.client.get_job([queuename])
         assert len(jobs) == 1
         for queue_name, job_id, job in jobs:
             assert job == six.b(t1)
             self.client.ack_job(job_id)
-        assert len(self.client.get_job(['test_nack_q'], timeout=100)) == 0
+        assert len(self.client.get_job([queuename], timeout=100)) == 0
 
     def test_qpeek(self):
         """
-        Test qpeek
-        
+        Test qpeek.
+
         Ran into some problems with an ENQUEUE/DEQUEUE test that
         was using qpeek, checking core functionality of qpeek().
         """
-        queuename = "test_qpeek-%d" % random.randint(1000, 1000000)
+        queuename = "test_qpeek-%s" % self.testID
         job_id = self.client.add_job(queuename, "Peek A Boo")
 
         peeked = self.client.qpeek(queuename, 1)
@@ -71,6 +76,8 @@ class TestDisque(unittest.TestCase):
 
         This test relies on add_job() being functional, and
         the local disque not being a disque proxy to a mesh.
+
+        TODO: unique the queues with self.testID.
         """
         t1 = str(time.time())
         qa = self.client.qscan()
@@ -91,7 +98,7 @@ class TestDisque(unittest.TestCase):
     def test_jscan(self):
         """Simple test of the jscan function."""
         t1 = time.time()
-        queuename = "test_jscan-%d" % random.randint(1000, 1000000)
+        queuename = "test_jscan-%s" % self.testID
         j1 = self.client.add_job(queuename, str(t1), timeout=100)
 
         jerbs = self.client.jscan(queue=queuename)
@@ -99,11 +106,11 @@ class TestDisque(unittest.TestCase):
 
     def test_del_job(self):
         """Simple test of del_job, needs qpeek.
-        
+
         FIXME: This function has grown ugly.
         """
         t1 = time.time()
-        queuename = "test_del_job-%d" % random.randint(1000, 1000000)
+        queuename = "test_del_job-%s" % self.testID
 
         j1 = self.client.add_job(queuename, str(t1))
 
@@ -125,8 +132,7 @@ class TestDisque(unittest.TestCase):
 
     def test_qlen(self):
         """Simple test of qlen."""
-
-        queuename = "test_qlen-%d" % random.randint(1000, 1000000)
+        queuename = "test_qlen-%s" % self.testID
 
         lengthOfTest = 100
         test_job = "Useless Job."
@@ -138,7 +144,7 @@ class TestDisque(unittest.TestCase):
 
     def test_shownack(self):
         """Simple test of show and nack."""
-        queuename = "test_show-%d" % random.randint(1000, 1000000)
+        queuename = "test_show-%s" % self.testID
 
         test_job = six.b("Show me.")
 
