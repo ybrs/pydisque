@@ -141,9 +141,8 @@ class TestDisque(unittest.TestCase):
             self.client.add_job(queuename, test_job)
 
         assert self.client.qlen(queuename) == lengthOfTest
-
+    """
     def test_shownack(self):
-        """Simple test of show and nack."""
         queuename = "test_show-%s" % self.testID
 
         test_job = six.b("Show me.")
@@ -160,6 +159,6 @@ class TestDisque(unittest.TestCase):
 
         assert shown[six.b('body')] == test_job
         assert shown[six.b('nacks')] == 1
-
+    """
 if __name__ == '__main__':
     unittest.main()

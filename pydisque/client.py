@@ -3,7 +3,6 @@
 import redis
 from redis.exceptions import ConnectionError
 from functools import wraps
-import six
 import logging
 
 logger = logging.getLogger(__name__)
@@ -358,18 +357,7 @@ class Client(object):
         :param job_id:
 
         """
-        rtn = {}
-        data = self.execute_command("SHOW", job_id)
-        
-        # We need to increment by two, this might not be the proper
-        # pythonic way.
-        for i in range(len(data)):
-            if i % 2 == 1:
-                continue
-            else:
-                rtn[six.u(data[i])] = data[i+1]
-
-        return rtn
+        return self.execute_command("SHOW", job_id)
 
     def qscan(self, cursor=0, count=None, busyloop=None, minlen=None,
               maxlen=None, importrate=None):
