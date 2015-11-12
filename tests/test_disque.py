@@ -80,18 +80,15 @@ class TestDisque(unittest.TestCase):
         TODO: unique the queues with self.testID.
         """
         t1 = str(time.time())
-        qa = self.client.qscan()
-        # print "Cursor: %s Jobs: %s" % (qa[0], qa[1])
+        
         self.client.add_job("q1", t1, timeout=100)
         self.client.add_job("q2", t1, timeout=100)
+        
         qb = self.client.qscan()
-        # print "Cursor: %s Jobs: %s" % (qb[0], qb[1])
+        
         assert qb[0]
         assert qb[1]
 
-        # i am thinking we need some kind of master 'clear queue'
-        # command in disque, hopefully not just for the purposes of
-        # making this unit test more effective...
         assert six.b("q1") in qb[1]
         assert six.b("q2") in qb[1]
 
