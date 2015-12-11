@@ -24,7 +24,7 @@ class TestDisque(unittest.TestCase):
         self.client = Client(['localhost:7711'])
         self.client.connect()
         self.testID = "%d.%d" % (time.time(),
-            random.randint(1000, 1000000))
+                                 random.randint(1000, 1000000))
 
     def test_publish_and_receive(self):
         """Test the most important functions of pydisque."""
@@ -80,12 +80,12 @@ class TestDisque(unittest.TestCase):
         TODO: unique the queues with self.testID.
         """
         t1 = str(time.time())
-        
+
         self.client.add_job("q1", t1, timeout=100)
         self.client.add_job("q2", t1, timeout=100)
-        
+ 
         qb = self.client.qscan()
-        
+
         assert qb[0]
         assert qb[1]
 
@@ -138,6 +138,22 @@ class TestDisque(unittest.TestCase):
             self.client.add_job(queuename, test_job)
 
         assert self.client.qlen(queuename) == lengthOfTest
+
+    def test_qstat(self):
+        """Testing QSTAT."""
+        queuename = "test_qstat-%s" % self.testID
+
+        testqueue = ["a", "b", "c"]
+        for x in testqueue:
+            self.client.add_job(queuename, x)
+
+        stat = self.client.qstat(queuename)
+
+        # check the basics
+        assert 'jobs-in' in stat
+        assert 'jobs-out' in stat
+
+
     """
     def test_shownack(self):
         queuename = "test_show-%s" % self.testID
