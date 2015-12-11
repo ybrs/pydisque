@@ -150,6 +150,7 @@ class TestDisque(unittest.TestCase):
         stat = self.client.qstat(queuename)
 
         # check the basics
+        print(stat)
         assert 'jobs-in' in stat
         assert 'jobs-out' in stat
 
