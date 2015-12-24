@@ -295,10 +295,11 @@ class Client(object):
 
         Future support / testing of QSTAT support in Disque
 
-        QSTAT <qname> (TODO)
+        QSTAT <qname>
 
         Return produced ... consumed ... idle ... sources [...] ctime ...
         """
+        # TODO: we should be returning this as a parsed dict
         return self.execute_command('QSTAT', queue_name)
 
     def qpeek(self, queue_name, count):
