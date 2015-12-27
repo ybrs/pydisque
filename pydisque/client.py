@@ -3,6 +3,7 @@
 import redis
 from redis.exceptions import ConnectionError
 from functools import wraps
+from itertools import izip_longest
 import logging
 
 logger = logging.getLogger(__name__)
@@ -144,6 +145,11 @@ class Client(object):
             self.connect()
             logger.warn('connected')
             raise
+
+    def _grouper(self, iterable, n, fillvalue=None):
+        """Collect data into fixed-length chunks or blocks"""
+        args = [iter(iterable)] * n
+        return izip_longest(fillvalue=fillvalue, *args)
 
     def info(self):
         """
@@ -289,7 +295,10 @@ class Client(object):
         """
         return self.execute_command('QLEN', queue_name)
 
-    def qstat(self, queue_name):
+    # TODO (canardleteer): a QueueStatus object may be the best way to do this
+    # TODO (canardleteer): return_dict should probably be True by default, but
+    #                      i don't want to break anyones code
+    def qstat(self, queue_name, return_dict=False):
         """
         Return the status of the queue (currently unimplemented).
 
@@ -299,8 +308,13 @@ class Client(object):
 
         Return produced ... consumed ... idle ... sources [...] ctime ...
         """
-        # TODO: we should be returning this as a parsed dict
-        return self.execute_command('QSTAT', queue_name)
+        rtn = self.execute_command('QSTAT', queue_name)
+
+        if return_dict:
+            grouped = self._grouper(rtn, 2)
+            rtn = dict( (a,b) for a,b in grouped)
+        
+        return rtn
 
     def qpeek(self, queue_name, count):
         """
