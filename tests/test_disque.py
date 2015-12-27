@@ -83,7 +83,7 @@ class TestDisque(unittest.TestCase):
 
         self.client.add_job("q1", t1, timeout=100)
         self.client.add_job("q2", t1, timeout=100)
- 
+
         qb = self.client.qscan()
 
         assert qb[0]
@@ -140,7 +140,7 @@ class TestDisque(unittest.TestCase):
         assert self.client.qlen(queuename) == lengthOfTest
 
     def test_qstat(self):
-        """Testing QSTAT."""
+        """Testing QSTAT (default behavior)."""
         queuename = "test_qstat-%s" % self.testID
 
         testqueue = ["a", "b", "c"]
@@ -150,10 +150,21 @@ class TestDisque(unittest.TestCase):
         stat = self.client.qstat(queuename)
 
         # check the basics
-        print(stat)
         assert 'jobs-in' in stat
         assert 'jobs-out' in stat
 
+    def test_qstat_dict(self):
+        """Testing QSTAT's (new dict behavior)."""
+        queuename = "test_qstat_dict-%s" % self.testID
+
+        testqueue = ["a", "b", "c"]
+        for x in testqueue:
+            self.client.add_job(queuename, x)
+
+        stat = self.client.qstat(queuename, True)
+
+        assert stat.get('jobs-in', None) is not None
+        assert stat.get('jobs-out', None) is not None
 
     """
     def test_shownack(self):
