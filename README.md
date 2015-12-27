@@ -26,7 +26,7 @@ If it can't connect to first node, it will try to connect to second, etc.., if i
 Now you can add jobs:
 
 ```python
-c.add_job("test_queue", json.dumps(["print", "hello", "world", time.time()]), timeout=100)
+client.add_job("test_queue", json.dumps(["print", "hello", "world", time.time()]), timeout=100)
 ```
 
 It will push the job "print" to the queue "test_queue" with a timeout of 100
@@ -37,11 +37,11 @@ Then, your workers will do something like this:
 
 ```python
 while True:
-    jobs = c.get_job(['test'])
+    jobs = client.get_job(['test'])
     for queue_name, job_id, job in jobs:
         job = json.loads(job)
         print ">>> received job:", job
-        c.ack_job(job_id)
+        client.ack_job(job_id)
 ```
 
 also check examples directory.
