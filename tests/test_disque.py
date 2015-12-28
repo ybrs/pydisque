@@ -166,9 +166,8 @@ class TestDisque(unittest.TestCase):
         assert stat.get('jobs-in', None) is not None
         assert stat.get('jobs-out', None) is not None
 
-    # TODO (canardleteer): bring this back
-    """
     def test_shownack(self):
+        """Test that NACK and SHOW work appropriately."""
         queuename = "test_show-%s" % self.testID
 
         test_job = six.b("Show me.")
@@ -179,12 +178,10 @@ class TestDisque(unittest.TestCase):
         for queue_name, job_id, job in jobs:
             self.client.nack_job(job_id)
 
-        shown = self.client.show(job_id)
+        shown = self.client.show(job_id, True)
 
-        print(shown)
+        assert shown.get('body') == test_job
+        assert shown.get('nacks') == 1
 
-        assert shown[six.b('body')] == test_job
-        assert shown[six.b('nacks')] == 1
-    """
 if __name__ == '__main__':
     unittest.main()
