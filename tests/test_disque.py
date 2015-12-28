@@ -166,6 +166,7 @@ class TestDisque(unittest.TestCase):
         assert stat.get('jobs-in', None) is not None
         assert stat.get('jobs-out', None) is not None
 
+    # TODO (canardleteer): bring this back
     """
     def test_shownack(self):
         queuename = "test_show-%s" % self.testID
