@@ -11,6 +11,7 @@ import time
 import random
 import six
 from pydisque.client import Client
+from redis.exceptions import ResponseError
 
 
 class TestDisque(unittest.TestCase):
@@ -170,7 +171,7 @@ class TestDisque(unittest.TestCase):
         """Test that NACK and SHOW work appropriately."""
         queuename = "test_show-%s" % self.testID
 
-        test_job = six.b("Show me.")
+        test_job = "Show me."
 
         self.client.add_job(queuename, test_job)
 
@@ -182,6 +183,28 @@ class TestDisque(unittest.TestCase):
 
         assert shown.get('body') == test_job
         assert shown.get('nacks') == 1
+
+    def test_pause(self):
+        """Test that a PAUSE message is acknowledged."""
+        queuename = "test_show-%s" % self.testID
+
+        test_job = "Jerbs, they are a thing"
+
+        self.client.pause(queuename, kw_in=True)
+
+        try:
+            job_id = self.client.add_job(queuename, test_job)
+        except ResponseError:
+            pass
+
+        # can we add a job again?
+        self.client.pause(queuename, kw_none=True)
+
+        job_id = self.client.add_job(queuename, test_job)
+
+        jobs = self.client.get_job([queuename])
+
+        # TODO(canardleteer): add a test of PAUSE SHOW
 
 if __name__ == '__main__':
     unittest.main()
