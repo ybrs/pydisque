@@ -365,14 +365,22 @@ class Client(object):
         """
         return self.execute_command("DELJOB", *job_ids)
 
-    def show(self, job_id):
+    # TODO (canardleteer): a JobStatus object may be the best for this,
+    #                      but I think SHOW is going to change to SHOWJOB
+    def show(self, job_id, return_dict=False):
         """
         Describe the job.
 
         :param job_id:
 
         """
-        return self.execute_command("SHOW", job_id)
+        rtn = self.execute_command('SHOW', job_id)
+
+        if return_dict:
+            grouped = self._grouper(rtn, 2)
+            rtn = dict( (a,b) for a,b in grouped)
+
+        return rtn
 
     def qscan(self, cursor=0, count=None, busyloop=None, minlen=None,
               maxlen=None, importrate=None):
