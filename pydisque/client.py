@@ -147,7 +147,7 @@ class Client(object):
             raise
 
     def _grouper(self, iterable, n, fillvalue=None):
-        """Collect data into fixed-length chunks or blocks"""
+        """Collect data into fixed-length chunks or blocks."""
         args = [iter(iterable)] * n
         return izip_longest(fillvalue=fillvalue, *args)
 
@@ -206,6 +206,7 @@ class Client(object):
         if async:
             command += ['ASYNC']
 
+        # TODO: we need to handle "-PAUSE" messages more appropriately
         logger.debug("sending job - %s", command)
         job_id = self.execute_command(*command)
         logger.debug("sent job - %s", command)
@@ -312,8 +313,8 @@ class Client(object):
 
         if return_dict:
             grouped = self._grouper(rtn, 2)
-            rtn = dict( (a,b) for a,b in grouped)
-        
+            rtn = dict((a, b) for a, b in grouped)
+
         return rtn
 
     def qpeek(self, queue_name, count):
@@ -378,7 +379,7 @@ class Client(object):
 
         if return_dict:
             grouped = self._grouper(rtn, 2)
-            rtn = dict( (a,b) for a,b in grouped)
+            rtn = dict((a, b) for a, b in grouped)
 
         return rtn
 
