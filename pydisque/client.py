@@ -475,6 +475,18 @@ class Client(object):
 
         return self.execute_command(*command)
 
+    def hello(self):
+        """
+        Returns hello format version, this node ID, all the nodes IDs, IP addresses, ports, and priority (lower is better, means node more available).
+        Clients should use this as an handshake command when connecting with a Disque node.
+
+        HELLO
+        :returns: [<hello format version>, <this node ID>, [<all the nodes IDs, IP addresses, ports, and priority>, ...]
+        """
+        return self.execute_command("HELLO")
+
+
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
