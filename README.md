@@ -69,6 +69,7 @@ For now please check docstrings in disque/client.py, implemented commands are
 - del_job
 - show
 - pause
+- hello
 
 Installation
 ------------
