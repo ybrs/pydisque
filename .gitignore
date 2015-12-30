@@ -2,3 +2,6 @@
 .idea
 python_disque.egg-info/
 env/
+
+*.egg-info
+dist/
