@@ -215,7 +215,7 @@ class Client(object):
         logger.debug("job_id: %s " % job_id)
         return job_id
 
-    def get_job(self, queues, timeout=None, count=None):
+    def get_job(self, queues, timeout=None, count=None, withcounters=False):
         """
         Return some number of jobs from specified queues.
 
@@ -233,13 +233,20 @@ class Client(object):
             command += ['TIMEOUT', timeout]
         if count:
             command += ['COUNT', count]
+        if withcounters:
+            command += ['WITHCOUNTERS']
 
         command += ['FROM'] + queues
         results = self.execute_command(*command)
         if not results:
             return []
-        return [(job_id, queue_name, payload) for
-                job_id, queue_name, payload in results]
+
+        if withcounters:
+            return [(job_id, queue_name, payload, nacks, additional_deliveries) for
+                    job_id, queue_name, payload, _, nacks, _, additional_deliveries in results]
+        else:
+            return [(job_id, queue_name, payload) for
+                    job_id, queue_name, payload in results]
 
     def ack_job(self, *job_ids):
         """
