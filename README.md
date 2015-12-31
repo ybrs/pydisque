@@ -89,3 +89,4 @@ Credits
 - [ybrs](https://github.com/ybrs)
 - [lovelle](https://github.com/lovelle)
 - [canardleteer](https://github.com/canardleteer)
+- [shuge](https://github.com/shuge)
