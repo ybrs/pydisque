@@ -5,3 +5,5 @@ env/
 *.egg-info
 dist/
 build/
+
+.tox/
