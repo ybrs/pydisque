@@ -6,4 +6,7 @@ env/
 dist/
 build/
 
+# tox temporary folders
 .tox/
+.cache/
+
