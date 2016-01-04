@@ -216,6 +216,12 @@ class TestDisque(unittest.TestCase):
         got = self.client.get_job([queue_name], withcounters=False)
         self.assertListEqual(expected, got)
 
+    def test_get_job_withcounters(self):
+        queue_name = "test_get_job." + self.testID
+
+        job = str(time.time())
+        job_id = self.client.add_job(queue_name, job)
+
         nacks = 0
         additional_deliveries = 0
         expected = [(queue_name, job_id, job, nacks, additional_deliveries)]
