@@ -214,7 +214,7 @@ class TestDisque(unittest.TestCase):
 
         expected = [(queue_name, job_id, job)]
         got = self.client.get_job([queue_name], withcounters=False)
-        self.assertListEqual(expected, got)
+        assert expected == got
 
     def test_get_job_withcounters(self):
         queue_name = "test_get_job." + self.testID
@@ -226,7 +226,7 @@ class TestDisque(unittest.TestCase):
         additional_deliveries = 0
         expected = [(queue_name, job_id, job, nacks, additional_deliveries)]
         got = self.client.get_job([queue_name], withcounters=True)
-        self.assertListEqual(expected, got)
+        assert expected == got
 
 if __name__ == '__main__':
     unittest.main()
