@@ -3,7 +3,11 @@
 import redis
 from redis.exceptions import ConnectionError
 from functools import wraps
-from itertools import izip_longest
+try:
+  # Python 3
+  from itertools import zip_longest
+except ImportError:
+  from itertools import izip_longest as zip_longest
 import logging
 
 logger = logging.getLogger(__name__)
@@ -149,7 +153,7 @@ class Client(object):
     def _grouper(self, iterable, n, fillvalue=None):
         """Collect data into fixed-length chunks or blocks."""
         args = [iter(iterable)] * n
-        return izip_longest(fillvalue=fillvalue, *args)
+        return zip_longest(fillvalue=fillvalue, *args)
 
     def info(self):
         """
