@@ -9,8 +9,8 @@ pydisque's documentation!
 Create a new Disque client by passing a list of nodes::
 
     from pydisque.client import Client
-    client = Client(["127.0.0.1:7711", "127.0.0.1:7712", "127.0.0.1:7713"])
-    client.connect()
+    c = Client(["127.0.0.1:7711", "127.0.0.1:7712", "127.0.0.1:7713"])
+    c.connect()
 
 If it can't connect to first node, it will try to connect to second, etc.., if it can't connect to any node, it will raise a redis.exceptions.ConnectionError as you can imagine.
 
@@ -25,7 +25,7 @@ in time. If it can't reach the node - maybe it was shutdown etc. - it will retry
 Then, your workers will do something like this::
 
     while True:
-        jobs = c.get_job(['test'])
+        jobs = c.get_job(['test_queue'])
         for queue_name, job_id, job in jobs:
             job = json.loads(job)
             print ">>> received job:", job
