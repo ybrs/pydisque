@@ -206,5 +206,27 @@ class TestDisque(unittest.TestCase):
 
         # TODO(canardleteer): add a test of PAUSE SHOW
 
+    def test_get_job(self):
+        queue_name = "test_get_job." + self.testID
+
+        job = str(time.time())
+        job_id = self.client.add_job(queue_name, job)
+
+        expected = [(queue_name, job_id, job)]
+        got = self.client.get_job([queue_name], withcounters=False)
+        assert expected == got
+
+    def test_get_job_withcounters(self):
+        queue_name = "test_get_job." + self.testID
+
+        job = str(time.time())
+        job_id = self.client.add_job(queue_name, job)
+
+        nacks = 0
+        additional_deliveries = 0
+        expected = [(queue_name, job_id, job, nacks, additional_deliveries)]
+        got = self.client.get_job([queue_name], withcounters=True)
+        assert expected == got
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,7 +1,12 @@
 *.pyc
 .idea
-python_disque.egg-info/
 env/
 
 *.egg-info
 dist/
+build/
+
+# tox temporary folders
+.tox/
+.cache/
+
