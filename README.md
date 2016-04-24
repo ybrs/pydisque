@@ -37,7 +37,7 @@ Then, your workers will do something like this:
 
 ```python
 while True:
-    jobs = client.get_job(['test'])
+    jobs = client.get_job(['test_queue'])
     for queue_name, job_id, job in jobs:
         job = json.loads(job)
         print ">>> received job:", job
