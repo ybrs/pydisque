@@ -182,7 +182,7 @@ class Client(object):
             before the job is queued by any server.
         :param retry: sec period after which, if no ACK is received, the
             job is put again into the queue for delivery. If RETRY is 0,
-            the job has an at-least-once delivery semantics.
+            the job has an at-most-once delivery semantics.
         :param ttl: sec is the max job life in seconds. After this time,
             the job is deleted even if it was not successfully delivered.
         :param maxlen: count specifies that if there are already count
@@ -201,7 +201,7 @@ class Client(object):
             command += ['REPLICATE', replicate]
         if delay:
             command += ['DELAY', delay]
-        if retry:
+        if retry is not None:
             command += ['RETRY', retry]
         if ttl:
             command += ['TTL', ttl]
