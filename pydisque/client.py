@@ -128,7 +128,7 @@ class Client(object):
             except redis.exceptions.ConnectionError:
                 pass
         if not self.connected_node:
-            raise Exception('couldnt connect to any nodes')
+            raise ConnectionError('couldnt connect to any nodes')
         logger.info("connected to node %s" % self.connected_node)
 
     def get_connection(self):
@@ -137,7 +137,10 @@ class Client(object):
 
         :rtype: redis.Redis
         """
-        return self.connected_node.connection
+        if self.connected_node:
+            return self.connected_node.connection
+        else:
+            raise ConnectionError("not connected")
 
     @retry()
     def execute_command(self, *args, **kwargs):
