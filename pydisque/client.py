@@ -1,7 +1,7 @@
 """Pydisque makes Disque easy to access in python."""
 
 import redis
-from redis.exceptions import ConnectionError
+from redis.exceptions import ConnectionError, RedisError
 from functools import wraps
 try:
   # Python 3
@@ -68,7 +68,7 @@ class retry(object):
             while c <= self.retry_count:
                 try:
                     return fn(*args, **kwargs)
-                except:
+                except RedisError:
                     logging.critical("retrying because of this exception - %s",
                                      c)
                     logging.exception("exception to retry ")
