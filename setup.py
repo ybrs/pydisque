@@ -2,7 +2,10 @@
 
 from setuptools import setup
 
-VERSION = '0.1.3'
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+VERSION = '0.1.5'
 DESCRIPTION = 'disque client'
 
 setup(
@@ -11,6 +14,8 @@ setup(
     description=DESCRIPTION,
     author='ybrs',
     license='MIT',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="http://github.com/ybrs/pydisque",
     author_email='aybars.badur@gmail.com',
     packages=['pydisque'],

@@ -1,0 +1,4 @@
+0.1.5
+======
+- python3 complatibility (fix by @abdul-khalid)
+- fixed tests for python3 comp.
