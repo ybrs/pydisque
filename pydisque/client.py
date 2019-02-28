@@ -169,7 +169,7 @@ class Client(object):
         return self.execute_command("INFO")
 
     def add_job(self, queue_name, job, timeout=200, replicate=None, delay=None,
-                retry=None, ttl=None, maxlen=None, async=None):
+                retry=None, ttl=None, maxlen=None, asynchronous=None):
         """
         Add a job to a queue.
 
@@ -191,10 +191,11 @@ class Client(object):
         :param maxlen: count specifies that if there are already count
             messages queued for the specified queue name, the message is
             refused and an error reported to the client.
-        :param async: asks the server to let the command return ASAP and
+        :param asynchronous: asks the server to let the command return ASAP and
             replicate the job to other nodes in the background. The job
             gets queued ASAP, while normally the job is put into the queue
-            only when the client gets a positive reply.
+            only when the client gets a positive reply. Changing the name of this
+            argument as async is reserved keyword in python 3.7
 
         :returns: job_id
         """
@@ -210,7 +211,7 @@ class Client(object):
             command += ['TTL', ttl]
         if maxlen:
             command += ['MAXLEN', maxlen]
-        if async:
+        if asynchronous:
             command += ['ASYNC']
 
         # TODO(canardleteer): we need to handle "-PAUSE" messages more
