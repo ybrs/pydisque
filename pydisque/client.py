@@ -95,8 +95,15 @@ class Client(object):
 
     """
 
-    def __init__(self, nodes=None):
-        """Initalize a client to the specified nodes."""
+    def __init__(self, nodes=None, **kwargs):
+        """\
+        Initalize a client to the specified nodes.
+
+        kwargs are passed directly to redis client redis.Redis
+
+        eg: to set password, pass password='...'
+
+        """
         if nodes is None:
             nodes = ['localhost:7711']
 
@@ -104,6 +111,7 @@ class Client(object):
         for n in nodes:
             self.nodes[n] = None
 
+        self.client_kw_args = kwargs
         self.connected_node = None
 
     def connect(self):
@@ -115,10 +123,12 @@ class Client(object):
         :returns: nothing
         """
         self.connected_node = None
+
         for i, node in self.nodes.items():
             host, port = i.split(':')
             port = int(port)
-            redis_client = redis.Redis(host, port)
+            redis_client = redis.Redis(host, port, **self.client_kw_args)
+
             try:
                 ret = redis_client.execute_command('HELLO')
                 format_version, node_id = ret[0], ret[1]
@@ -127,6 +137,7 @@ class Client(object):
                 self.connected_node = self.nodes[i]
             except redis.exceptions.ConnectionError:
                 pass
+
         if not self.connected_node:
             raise ConnectionError('couldnt connect to any nodes')
         logger.info("connected to node %s" % self.connected_node)
@@ -509,7 +520,7 @@ class Client(object):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
-    c = Client(['localhost:7712', 'localhost:7711'])
+    c = Client(['localhost:7712', 'localhost:7711'], password='foobared')
     c.connect()
     import json
     job = json.dumps(["hello", "1234"])
